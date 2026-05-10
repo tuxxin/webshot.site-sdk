@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>@tuxxin/webshot — browser example</title>
+  <style>
+    body { font-family: system-ui, sans-serif; max-width: 800px; margin: 2em auto; padding: 0 1em; }
+    img  { max-width: 100%; border: 1px solid #ddd; margin-top: 1em; }
+    input, button { padding: .5em; font-size: 1em; }
+    input { width: 70%; }
+    .row { margin-bottom: 1em; }
+  </style>
+</head>
+<body>
+  <h1>@tuxxin/webshot — browser example</h1>
+  <p>Tiny demo of calling the <a href="https://webshot.site">Webshot API</a> from a webpage. Built and maintained by <a href="https://tuxxin.com">Tuxxin</a>.</p>
+
+  <div class="row">
+    <input id="url"   type="url" value="https://example.com">
+    <button id="go">Capture</button>
+  </div>
+
+  <p id="status">Idle.</p>
+  <img id="preview" alt="Capture preview will appear here">
+
+  <script type="module">
+    import { WebshotClient, WebshotThrottledError } from 'https://esm.sh/@tuxxin/webshot';
+
+    const client  = new WebshotClient();
+    const status  = document.getElementById('status');
+    const preview = document.getElementById('preview');
+
+    document.getElementById('go').addEventListener('click', async () => {
+      const url = document.getElementById('url').value;
+      status.textContent = 'Capturing…';
+      preview.removeAttribute('src');
+      try {
+        const shot = await client.capture({ url, format: 'png', mode: 'desktop_viewport' });
+        const blob = new Blob([shot.bytes], { type: shot.contentType });
+        preview.src = URL.createObjectURL(blob);
+        status.textContent = `Done. ${shot.bytes.length} bytes — ${shot.rateLimit.remaining}/${shot.rateLimit.limit} credits left.`;
+      } catch (err) {
+        if (err instanceof WebshotThrottledError) {
+          status.innerHTML = `Throttled. Try again in ${err.retryAfter}s, or email <a href="mailto:${err.contact}">${err.contact}</a> for higher limits.`;
+        } else {
+          status.textContent = `Failed: ${err.message}`;
+        }
+      }
+    });
+  </script>
+</body>
+</html>

@@ -1,0 +1,57 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name        = "webshot"
+version     = "1.0.0"
+description = "Official Python client for the Webshot screenshot API (https://webshot.site)."
+readme      = "README.md"
+license     = { text = "MIT" }
+authors     = [{ name = "Tuxxin", email = "contact@tuxxin.com" }]
+keywords    = [
+    "screenshot", "webshot", "tuxxin", "headless-chrome", "puppeteer",
+    "url-to-image", "url-to-pdf", "page-capture", "visual-regression",
+]
+classifiers = [
+    "Development Status :: 5 - Production/Stable",
+    "Intended Audience :: Developers",
+    "License :: OSI Approved :: MIT License",
+    "Operating System :: OS Independent",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Programming Language :: Python :: 3.13",
+    "Topic :: Internet :: WWW/HTTP",
+    "Topic :: Multimedia :: Graphics",
+    "Topic :: Software Development :: Libraries :: Python Modules",
+    "Typing :: Typed",
+]
+requires-python = ">=3.9"
+dependencies = [
+    "httpx>=0.24",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7",
+    "pytest-asyncio>=0.21",
+    "mypy>=1.7",
+    "ruff>=0.1",
+]
+
+[project.urls]
+Homepage      = "https://webshot.site"
+Documentation = "https://webshot.site/developers"
+Repository    = "https://github.com/tuxxin/webshot.site-sdk"
+Issues        = "https://github.com/tuxxin/webshot.site-sdk/issues"
+"Maintainer"  = "https://tuxxin.com"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/webshot"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+testpaths    = ["tests"]

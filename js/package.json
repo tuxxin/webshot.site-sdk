@@ -1,0 +1,55 @@
+{
+  "name": "@tuxxin/webshot",
+  "version": "1.0.0",
+  "description": "Official JavaScript / TypeScript client for the Webshot screenshot API (https://webshot.site). Capture any public URL as PNG, JPG, WebP, or PDF.",
+  "keywords": [
+    "screenshot",
+    "webshot",
+    "tuxxin",
+    "headless-chrome",
+    "puppeteer",
+    "url-to-image",
+    "url-to-pdf",
+    "page-capture",
+    "visual-regression"
+  ],
+  "type": "module",
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js",
+      "require": "./dist/index.cjs"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsup src/index.ts --format esm,cjs --dts --clean",
+    "lint": "tsc --noEmit",
+    "test": "node --test test/*.test.mjs",
+    "prepublishOnly": "npm run lint && npm run build"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "tsup": "^8.0.0",
+    "typescript": "^5.4.0"
+  },
+  "homepage": "https://webshot.site",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tuxxin/webshot.site-sdk.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tuxxin/webshot.site-sdk/issues"
+  },
+  "author": "Tuxxin <contact@tuxxin.com> (https://tuxxin.com)",
+  "license": "MIT"
+}

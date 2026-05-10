@@ -1,0 +1,51 @@
+{
+    "name": "tuxxin/webshot",
+    "description": "Official PHP client for the Webshot screenshot API (https://webshot.site). Capture any public URL as PNG, JPG, WebP, or PDF.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "screenshot",
+        "webshot",
+        "tuxxin",
+        "headless-chrome",
+        "puppeteer",
+        "url-to-image",
+        "url-to-pdf",
+        "page-capture",
+        "visual-regression"
+    ],
+    "homepage": "https://webshot.site",
+    "support": {
+        "docs": "https://webshot.site/developers",
+        "issues": "https://github.com/tuxxin/webshot.site-sdk/issues",
+        "source": "https://github.com/tuxxin/webshot.site-sdk",
+        "email": "sales@tuxxin.com"
+    },
+    "authors": [
+        {
+            "name": "Tuxxin",
+            "email": "contact@tuxxin.com",
+            "homepage": "https://tuxxin.com",
+            "role": "Maintainer"
+        }
+    ],
+    "require": {
+        "php": ">=8.1",
+        "ext-curl": "*",
+        "ext-json": "*"
+    },
+    "require-dev": {
+        "phpunit/phpunit": "^10"
+    },
+    "autoload": {
+        "psr-4": {
+            "Tuxxin\\Webshot\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Tuxxin\\Webshot\\Tests\\": "tests/"
+        }
+    },
+    "minimum-stability": "stable"
+}
