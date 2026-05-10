@@ -10,9 +10,12 @@ export type Format = 'jpg' | 'png' | 'webp' | 'pdf';
  * Capture mode.
  *  - `*_full`     scrolls the entire document and stitches one tall image.
  *  - `*_viewport` captures only what fits above the fold at the viewport size.
+ *  - `custom`     premium-only — caller supplies arbitrary `width` and `height`.
+ *                 Requires a premium API key set via ClientOptions.apiKey.
  *
  * Viewport pixel sizes:
  *   desktop = 1920×1080  ·  tablet = 834×1194  ·  mobile = 390×844 (iPhone 15 Pro)
+ *   custom  = 320–3840 wide  ·  240–2160 tall
  */
 export type Mode =
   | 'desktop_full'
@@ -20,7 +23,8 @@ export type Mode =
   | 'tablet_full'
   | 'tablet_viewport'
   | 'mobile_full'
-  | 'mobile_viewport';
+  | 'mobile_viewport'
+  | 'custom';
 
 /** Constructor options. */
 export interface ClientOptions {
@@ -32,6 +36,11 @@ export interface ClientOptions {
   userAgent?: string;
   /** Optional pre-configured fetch implementation (for testing or custom transports). */
   fetch?: typeof globalThis.fetch;
+  /**
+   * Premium API key (sent as `Authorization: Bearer <key>`). Required for
+   * `mode: 'custom'`. Email sales@tuxxin.com to provision one.
+   */
+  apiKey?: string;
 }
 
 /** Per-call capture options. `url` is required, others have sensible defaults. */
@@ -42,6 +51,12 @@ export interface CaptureOptions {
   format?: Format;
   /** Capture mode. Defaults to `'desktop_full'`. */
   mode?: Mode;
+  /** Custom viewport width in pixels (320–3840). Required when `mode: 'custom'`. Premium only. */
+  width?: number;
+  /** Custom viewport height in pixels (240–2160). Required when `mode: 'custom'`. Premium only. */
+  height?: number;
+  /** When `mode: 'custom'`: scroll the entire document (true) or capture only the custom viewport (false, default). */
+  fullPage?: boolean;
 }
 
 /** What `capture()` returns. */

@@ -49,6 +49,7 @@ Construct a sync client. All keyword args are optional.
 | `base_url`   | `'https://webshot.site'`         | Override for testing or self-hosting. |
 | `timeout`    | `60.0`                           | Per-request timeout (seconds). Accepts `httpx.Timeout` for fine-grained control. |
 | `user_agent` | `'webshot-python/<version>'`     | Sent as `User-Agent`. |
+| `api_key`    | `None`                           | Premium API key. Sent as `Authorization: Bearer <key>`. Required for `mode='custom'`. Email sales@tuxxin.com to obtain one. |
 | `client`     | `None`                           | Inject a pre-configured `httpx.Client` (advanced). |
 
 `AsyncWebshotClient(...)` mirrors the same signature but accepts `httpx.AsyncClient`.
@@ -91,14 +92,34 @@ class ThrottleStatus:
 | `'webp'` | modern compression |
 | `'pdf'`  | print-ready, vector text preserved |
 
-| Mode               | Viewport             | Description |
-|---                 |---                   |---          |
+| Mode                 | Viewport             | Description |
+|---                   |---                   |---          |
 | `'desktop_full'`     | 1920×1080            | Full-page desktop scroll. **Default.** |
 | `'desktop_viewport'` | 1920×1080            | Above-the-fold desktop. |
 | `'tablet_full'`      | 834×1194             | Full-page iPad-class. |
 | `'tablet_viewport'`  | 834×1194             | Above-the-fold iPad-class. |
 | `'mobile_full'`      | 390×844 (iPhone 15)  | Full-page mobile scroll. |
 | `'mobile_viewport'`  | 390×844 (iPhone 15)  | Above-the-fold mobile. |
+| `'custom'`           | 320–3840 × 240–2160  | **Premium-only.** Pass `width`, `height`, and (optional) `full_page=`. Requires `api_key=` on the client. |
+
+### Custom resolution (premium)
+
+```python
+from webshot import WebshotClient
+
+with WebshotClient(api_key="wsk_YOUR_PREMIUM_KEY") as client:
+    shot = client.capture(
+        "https://example.com",
+        format="png",
+        mode="custom",
+        width=2560,
+        height=1440,
+        full_page=True,
+    )
+    shot.write("2k.png")
+```
+
+The `api_key` is sent as `Authorization: Bearer <key>` on every request. Email **[sales@tuxxin.com](mailto:sales@tuxxin.com?subject=Webshot%20—%20premium%20API%20key)** to provision one — usually same-day reply.
 
 ## Errors
 

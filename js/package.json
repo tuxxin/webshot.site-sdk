@@ -1,6 +1,6 @@
 {
   "name": "@tuxxin/webshot",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "description": "Official JavaScript / TypeScript client for the Webshot screenshot API (https://webshot.site). Capture any public URL as PNG, JPG, WebP, or PDF.",
   "keywords": [
     "screenshot",

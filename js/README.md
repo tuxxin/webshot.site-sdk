@@ -73,14 +73,18 @@ console.log(`Credits remaining: ${shot.rateLimit.remaining}/${shot.rateLimit.lim
 | `timeoutMs`  | `number` | `60_000`                                       | Per-request timeout. |
 | `userAgent`  | `string` | `'@tuxxin/webshot/<version>'`                  | Sent as `User-Agent`. |
 | `fetch`      | `fetch`  | `globalThis.fetch`                             | Inject a custom fetch (testing, undici, etc.). |
+| `apiKey`     | `string` | `undefined`                                    | Premium API key. Sent as `Authorization: Bearer <key>`. Required for `mode: 'custom'`. Email sales@tuxxin.com to obtain one. |
 
 ### `client.capture(options): Promise<CaptureResult>`
 
-| Option   | Type     | Default          | Notes |
-|---       |---       |---               |---    |
-| `url`    | `string` | **required**     | Public HTTP/HTTPS URL. |
-| `format` | `Format` | `'jpg'`          | One of `'jpg' \| 'png' \| 'webp' \| 'pdf'`. |
-| `mode`   | `Mode`   | `'desktop_full'` | See [Modes](#modes) below. |
+| Option     | Type      | Default          | Notes |
+|---         |---        |---               |---    |
+| `url`      | `string`  | **required**     | Public HTTP/HTTPS URL. |
+| `format`   | `Format`  | `'jpg'`          | One of `'jpg' \| 'png' \| 'webp' \| 'pdf'`. |
+| `mode`     | `Mode`    | `'desktop_full'` | See [Modes](#modes) below. |
+| `width`    | `number`  | —                | Custom viewport width (320–3840). Required when `mode: 'custom'`. |
+| `height`   | `number`  | —                | Custom viewport height (240–2160). Required when `mode: 'custom'`. |
+| `fullPage` | `boolean` | `false`          | When `mode: 'custom'`: scroll the entire document instead of just the viewport. |
 
 Returns:
 
@@ -122,6 +126,26 @@ interface ThrottleStatus {
 | `tablet_viewport`  | 834×1194             | Above-the-fold iPad-class. |
 | `mobile_full`      | 390×844 (iPhone 15)  | Full-page mobile scroll. |
 | `mobile_viewport`  | 390×844 (iPhone 15)  | Above-the-fold mobile. |
+| `custom`           | 320–3840 × 240–2160  | **Premium-only.** Caller supplies `width`, `height`, and (optional) `fullPage`. Requires `apiKey` in `ClientOptions`. |
+
+### Custom resolution (premium)
+
+```ts
+import { WebshotClient } from '@tuxxin/webshot';
+
+const client = new WebshotClient({ apiKey: 'wsk_YOUR_PREMIUM_KEY' });
+
+const shot = await client.capture({
+  url:      'https://example.com',
+  format:   'png',
+  mode:     'custom',
+  width:    2560,
+  height:   1440,
+  fullPage: true,
+});
+```
+
+The `apiKey` is sent as `Authorization: Bearer <key>` on every request. Email **[sales@tuxxin.com](mailto:sales@tuxxin.com?subject=Webshot%20—%20premium%20API%20key)** to provision one — usually same-day reply.
 
 ## Errors
 

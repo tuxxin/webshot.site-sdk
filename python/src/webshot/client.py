@@ -36,7 +36,14 @@ VALID_MODES: tuple[str, ...] = (
     "desktop_full", "desktop_viewport",
     "tablet_full",  "tablet_viewport",
     "mobile_full",  "mobile_viewport",
+    "custom",
 )
+
+# Custom-mode bounds — match the server-side caps in TiCore/src/Core/Screenshot.php.
+CUSTOM_MIN_WIDTH:  int = 320
+CUSTOM_MAX_WIDTH:  int = 3840
+CUSTOM_MIN_HEIGHT: int = 240
+CUSTOM_MAX_HEIGHT: int = 2160
 
 
 @dataclass(frozen=True)
@@ -80,13 +87,34 @@ DEFAULT_TIMEOUT_S = 60.0
 USER_AGENT        = f"webshot-python/{__version__} (+https://webshot.site)"
 
 
-def _validate_capture_args(url: str, fmt: str, mode: str) -> None:
+def _validate_capture_args(
+    url: str,
+    fmt: str,
+    mode: str,
+    width: Optional[int],
+    height: Optional[int],
+    has_api_key: bool,
+) -> None:
     if not isinstance(url, str) or not url:
         raise WebshotError("capture(): `url` must be a non-empty string.")
     if fmt not in VALID_FORMATS:
         raise WebshotError(f"capture(): invalid format {fmt!r}. Allowed: {', '.join(VALID_FORMATS)}.")
     if mode not in VALID_MODES:
         raise WebshotError(f"capture(): invalid mode {mode!r}. Allowed: {', '.join(VALID_MODES)}.")
+    if mode == "custom":
+        if width is None or height is None:
+            raise WebshotError("capture(): `width` and `height` are required when mode='custom'.")
+        if not (CUSTOM_MIN_WIDTH <= width <= CUSTOM_MAX_WIDTH and
+                CUSTOM_MIN_HEIGHT <= height <= CUSTOM_MAX_HEIGHT):
+            raise WebshotError(
+                f"capture(): custom dimensions out of range. "
+                f"Width {CUSTOM_MIN_WIDTH}-{CUSTOM_MAX_WIDTH}, height {CUSTOM_MIN_HEIGHT}-{CUSTOM_MAX_HEIGHT}."
+            )
+        if not has_api_key:
+            raise WebshotError(
+                "capture(): mode='custom' requires a premium `api_key` set on the client. "
+                "Email sales@tuxxin.com to obtain one."
+            )
 
 
 def _to_int(v: Any) -> Optional[int]:
@@ -155,6 +183,12 @@ class WebshotClient:
 
         with WebshotClient() as client:
             shot = client.capture("https://example.com", format="png")
+
+    Pass `api_key="wsk_..."` to use premium features (e.g. mode='custom'):
+
+        with WebshotClient(api_key="wsk_...") as client:
+            shot = client.capture("https://example.com", mode="custom",
+                                  width=2560, height=1440, full_page=True)
     """
 
     def __init__(
@@ -163,13 +197,18 @@ class WebshotClient:
         base_url: str = DEFAULT_BASE_URL,
         timeout: Union[float, httpx.Timeout] = DEFAULT_TIMEOUT_S,
         user_agent: str = USER_AGENT,
+        api_key: Optional[str] = None,
         client: Optional[httpx.Client] = None,
     ) -> None:
         self._base_url = base_url.rstrip("/")
         self._owns_client = client is None
+        self._api_key = api_key
+        headers = {"User-Agent": user_agent}
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
         self._client = client or httpx.Client(
             timeout=timeout,
-            headers={"User-Agent": user_agent},
+            headers=headers,
             follow_redirects=False,
         )
 
@@ -189,20 +228,31 @@ class WebshotClient:
         *,
         format: Format = "jpg",
         mode: Mode = "desktop_full",
+        width: Optional[int] = None,
+        height: Optional[int] = None,
+        full_page: bool = False,
     ) -> CaptureResult:
         """
         Capture a screenshot. Returns a `CaptureResult`.
+
+        For mode='custom', pass width and height (premium-only — requires the
+        client to be constructed with `api_key=`).
 
         Raises:
             WebshotThrottledError: rate limit hit (HTTP 429).
             WebshotApiError:       any other 4xx/5xx response.
             WebshotError:          network errors, timeouts, malformed responses.
         """
-        _validate_capture_args(url, format, mode)
+        _validate_capture_args(url, format, mode, width, height, has_api_key=bool(self._api_key))
+        body: dict[str, object] = {"url": url, "format": format, "mode": mode}
+        if mode == "custom":
+            body["width"]     = width
+            body["height"]    = height
+            body["full_page"] = full_page
         try:
             response = self._client.post(
                 self._base_url + "/api/capture",
-                json={"url": url, "format": format, "mode": mode},
+                json=body,
                 headers={"Accept": "image/*, application/pdf, application/json"},
             )
         except httpx.HTTPError as e:
@@ -251,13 +301,18 @@ class AsyncWebshotClient:
         base_url: str = DEFAULT_BASE_URL,
         timeout: Union[float, httpx.Timeout] = DEFAULT_TIMEOUT_S,
         user_agent: str = USER_AGENT,
+        api_key: Optional[str] = None,
         client: Optional[httpx.AsyncClient] = None,
     ) -> None:
         self._base_url = base_url.rstrip("/")
         self._owns_client = client is None
+        self._api_key = api_key
+        headers = {"User-Agent": user_agent}
+        if api_key:
+            headers["Authorization"] = f"Bearer {api_key}"
         self._client = client or httpx.AsyncClient(
             timeout=timeout,
-            headers={"User-Agent": user_agent},
+            headers=headers,
             follow_redirects=False,
         )
 
@@ -277,12 +332,20 @@ class AsyncWebshotClient:
         *,
         format: Format = "jpg",
         mode: Mode = "desktop_full",
+        width: Optional[int] = None,
+        height: Optional[int] = None,
+        full_page: bool = False,
     ) -> CaptureResult:
-        _validate_capture_args(url, format, mode)
+        _validate_capture_args(url, format, mode, width, height, has_api_key=bool(self._api_key))
+        body: dict[str, object] = {"url": url, "format": format, "mode": mode}
+        if mode == "custom":
+            body["width"]     = width
+            body["height"]    = height
+            body["full_page"] = full_page
         try:
             response = await self._client.post(
                 self._base_url + "/api/capture",
-                json={"url": url, "format": format, "mode": mode},
+                json=body,
                 headers={"Accept": "image/*, application/pdf, application/json"},
             )
         except httpx.HTTPError as e:

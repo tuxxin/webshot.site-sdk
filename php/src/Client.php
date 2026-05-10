@@ -22,27 +22,36 @@ use Tuxxin\Webshot\Exception\WebshotException;
  */
 class Client
 {
-    public const VERSION = '1.0.0';
+    public const VERSION = '1.1.0';
 
     public const FORMATS = ['jpg', 'png', 'webp', 'pdf'];
     public const MODES   = [
         'desktop_full', 'desktop_viewport',
         'tablet_full',  'tablet_viewport',
         'mobile_full',  'mobile_viewport',
+        'custom',
     ];
+
+    public const CUSTOM_MIN_WIDTH  = 320;
+    public const CUSTOM_MAX_WIDTH  = 3840;
+    public const CUSTOM_MIN_HEIGHT = 240;
+    public const CUSTOM_MAX_HEIGHT = 2160;
 
     private string $baseUrl;
     private int $timeoutS;
     private string $userAgent;
+    private ?string $apiKey;
 
     public function __construct(
         string $baseUrl   = 'https://webshot.site',
         int    $timeoutS  = 60,
         ?string $userAgent = null,
+        ?string $apiKey    = null,
     ) {
         $this->baseUrl   = rtrim($baseUrl, '/');
         $this->timeoutS  = $timeoutS;
         $this->userAgent = $userAgent ?? 'tuxxin-webshot-php/' . self::VERSION . ' (+https://webshot.site)';
+        $this->apiKey    = $apiKey;
     }
 
     /**
@@ -60,6 +69,9 @@ class Client
         string $url,
         string $format = 'jpg',
         string $mode   = 'desktop_full',
+        ?int   $width  = null,
+        ?int   $height = null,
+        bool   $fullPage = false,
     ): CaptureResult {
         if ($url === '') {
             throw new WebshotException('capture(): $url must be a non-empty string.');
@@ -75,10 +87,30 @@ class Client
             );
         }
 
-        $payload = json_encode(
-            ['url' => $url, 'format' => $format, 'mode' => $mode],
-            JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES,
-        );
+        $body = ['url' => $url, 'format' => $format, 'mode' => $mode];
+        if ($mode === 'custom') {
+            if ($width === null || $height === null) {
+                throw new WebshotException("capture(): \$width and \$height are required when mode='custom'.");
+            }
+            if ($width  < self::CUSTOM_MIN_WIDTH  || $width  > self::CUSTOM_MAX_WIDTH ||
+                $height < self::CUSTOM_MIN_HEIGHT || $height > self::CUSTOM_MAX_HEIGHT) {
+                throw new WebshotException(sprintf(
+                    "capture(): custom dimensions out of range. Width %d-%d, height %d-%d.",
+                    self::CUSTOM_MIN_WIDTH, self::CUSTOM_MAX_WIDTH,
+                    self::CUSTOM_MIN_HEIGHT, self::CUSTOM_MAX_HEIGHT
+                ));
+            }
+            if ($this->apiKey === null || $this->apiKey === '') {
+                throw new WebshotException(
+                    "capture(): mode='custom' requires a premium API key. Pass it as the 4th constructor argument or via setApiKey(). Email sales@tuxxin.com to obtain one."
+                );
+            }
+            $body['width']     = $width;
+            $body['height']    = $height;
+            $body['full_page'] = $fullPage;
+        }
+
+        $payload = json_encode($body, JSON_THROW_ON_ERROR | JSON_UNESCAPED_SLASHES);
 
         [$status, $body, $headers] = $this->executeHttp(
             'POST',
@@ -159,6 +191,9 @@ class Client
         }
 
         $allHeaders = array_merge($headers, ['User-Agent: ' . $this->userAgent]);
+        if ($this->apiKey !== null && $this->apiKey !== '') {
+            $allHeaders[] = 'Authorization: Bearer ' . $this->apiKey;
+        }
 
         curl_setopt_array($ch, [
             CURLOPT_RETURNTRANSFER => true,

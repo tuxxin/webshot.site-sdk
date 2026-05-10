@@ -38,6 +38,7 @@ echo "Credits remaining: {$shot->rateRemaining}/{$shot->rateLimit}\n";
 | `$baseUrl`   | `'https://webshot.site'`          | Override for testing or self-hosting. |
 | `$timeoutS`  | `60`                              | Per-request timeout (seconds). |
 | `$userAgent` | `'tuxxin-webshot-php/<version>'`  | Sent as `User-Agent`. |
+| `$apiKey`    | `null`                            | Premium API key. Sent as `Authorization: Bearer <key>`. Required for `mode='custom'`. Email sales@tuxxin.com to obtain one. |
 
 Subclass `Client` and override the protected `executeHttp()` method to plug in a different transport (e.g. Guzzle, Symfony HttpClient).
 
@@ -86,6 +87,27 @@ $s->nextReleaseAt;   // ?int — unix timestamp of next refill
 | `'tablet_viewport'`  | 834×1194             |
 | `'mobile_full'`      | 390×844 (iPhone 15)  |
 | `'mobile_viewport'`  | 390×844 (iPhone 15)  |
+| `'custom'`           | 320–3840 × 240–2160 — **premium-only**, requires `$apiKey` |
+
+### Custom resolution (premium)
+
+```php
+use Tuxxin\Webshot\Client;
+
+$client = new Client(apiKey: 'wsk_YOUR_PREMIUM_KEY');
+
+$shot = $client->capture(
+    'https://example.com',
+    format:   'png',
+    mode:     'custom',
+    width:    2560,
+    height:   1440,
+    fullPage: true,
+);
+$shot->write('2k.png');
+```
+
+The `$apiKey` is sent as `Authorization: Bearer <key>` on every request. Email **[sales@tuxxin.com](mailto:sales@tuxxin.com?subject=Webshot%20—%20premium%20API%20key)** to provision one — usually same-day reply.
 
 ## Errors
 
